@@ -1,16 +1,33 @@
+
+# ==================== IMPORTS ====================
+import os
+import sys
 import discord
 from discord.ext import commands, tasks
 import datetime
 import sqlite3
 import asyncio
 
-TOKEN = "DISCORD_TOKEN"
+# ==================== CONFIGURAÇÃO ====================
+# Carregar token
+TOKEN = os.getenv('DISCORD_TOKEN')
 
-CANAL_DESATIVADAS = 1436823733917450391
-CANAL_ENTREGUES   = 1436821935978713228
-CANAL_RECOLHIDAS  = 1436821973152960513
-CANAL_PAINEL      = 1443111030245818388
-CANAL_NOTIFICACAO = 1436821588778684436
+# Backup: tentar carregar de .env (para desenvolvimento local)
+if not TOKEN:
+    try:
+        from dotenv import load_dotenv
+        load_dotenv()
+        TOKEN = os.getenv('DISCORD_TOKEN')
+    except ImportError:
+        pass
+
+# Verificação FINAL
+if not TOKEN:
+    print("❌ ERRO: Token não encontrado!")
+    print("Configure DISCORD_TOKEN no SquareCloud ou crie um arquivo .env")
+    sys.exit(1)
+
+print(f"✅ Token carregado: {'*' * 20}{TOKEN[-10:] if TOKEN else 'NONE'}")
 
 # Dicionário de IDs de cargo de líderes
 CARGO_LIDERES = {
@@ -1669,4 +1686,15 @@ async def comando_lideres(ctx, *, fac_nome=None):
         embed.set_footer(text=f"Solicitado por {ctx.author.name}")
         await ctx.send(embed=embed)
 
-bot.run(TOKEN)
+# ==================== EXECUÇÃO ====================
+if __name__ == "__main__":
+    print("🚀 Iniciando bot...")
+    print(f"📏 Comprimento do token: {len(TOKEN)} caracteres")
+    
+    try:
+        bot.run(TOKEN)
+    except discord.errors.LoginFailure:
+        print("❌ FALHA: Token inválido!")
+        print("Verifique se o token está correto no SquareCloud")
+    except Exception as e:
+        print(f"❌ Erro: {type(e).__name__}: {e}")
